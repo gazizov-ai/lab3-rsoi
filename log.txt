@@ -1,0 +1,125 @@
+=== Start test scenario ===
+newman
+
+[rsoi][lab3] Hotels Booking System
+
+❏ success
+↳ [success] Получить список отелей
+  GET http://localhost:8080/api/v1/hotels?page=1&size=10 [200 OK, 376B, 18ms]
+  ┌
+  │ `Using "_" is deprecated. Use "require('lodash')" inst
+  │ ead.`
+  └
+  ✓  Получение списка отелей
+
+↳ [success] Получить информацию о статусе в программе лояльности
+  GET http://localhost:8080/api/v1/loyalty [200 OK, 162B, 4ms]
+  ✓  Получение информации о статусе в программе лояльности
+
+↳ [success] Забронировать отель
+  POST http://localhost:8080/api/v1/reservations [200 OK, 337B, 12ms]
+  ✓  Забронировать отель
+
+↳ [success] Информация по конкретному бронированию
+  GET http://localhost:8080/api/v1/reservations/28fe7378-1305-4873-babc-804c5af85bc6 [200 OK, 624B, 4ms]
+  ✓  Получение информации о конкретном бронировании
+
+↳ [success] Информация по всем бронированиям пользователя
+  GET http://localhost:8080/api/v1/reservations [200 OK, 2.73kB, 6ms]
+  ┌
+  │ `Using "_" is deprecated. Use "require('lodash')" inst
+  │ ead.`
+  └
+  ✓  Получение информации по всем бронированиям
+
+↳ [success] Информация о пользователе
+  GET http://localhost:8080/api/v1/me [200 OK, 2.83kB, 6ms]
+  ┌
+  │ `Using "_" is deprecated. Use "require('lodash')" inst
+  │ ead.`
+  └
+  ✓  Получение информации о пользователе
+
+↳ [success] Получить информацию о статусе в программе лояльности после бронирования
+  GET http://localhost:8080/api/v1/loyalty [200 OK, 162B, 2ms]
+  ✓  Получение информации о статусе в программе лояльности
+
+↳ [success] Отменить бронирование
+  DELETE http://localhost:8080/api/v1/reservations/28fe7378-1305-4873-babc-804c5af85bc6 [204 No Content, 96B, 11ms]
+  ✓  Отменить бронирование
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │               8 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │              16 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               8 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │               8 │               0 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 1059ms                                  │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 6.44kB (approx)                        │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 7ms [min: 2ms, max: 18ms, s.d.: 5ms] │
+└─────────────────────────────────────────────────────────────┘
+=== Step 1: stop loyalty-service ===
+newman
+
+[rsoi][lab3] Hotels Booking System
+
+❏ failover / step1
+↳ [failover] Получить список отелей
+  GET http://localhost:8080/api/v1/hotels?page=1&size=10 [200 OK, 376B, 18ms]
+  ┌
+  │ `Using "_" is deprecated. Use "require('lodash')" inst
+  │ ead.`
+  └
+  ✓  Получение списка отелей
+
+↳ [failover] Получить информацию о статусе в программе лояльности
+  GET http://localhost:8080/api/v1/loyalty [503 Service Unavailable, 167B, 3ms]
+  ✓  Получение информации о статусе в программе лояльности
+
+↳ [failover] Информация о пользователе
+  GET http://localhost:8080/api/v1/me [200 OK, 2.79kB, 7ms]
+  ✓  Получение информации о пользователе
+
+↳ [failover] Забронировать отель
+  POST http://localhost:8080/api/v1/reservations [503 Service Unavailable, 167B, 4ms]
+  ✓  Забронировать отель
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │               4 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │               8 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               4 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │               4 │               0 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 551ms                                   │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 3.02kB (approx)                        │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 8ms [min: 3ms, max: 18ms, s.d.: 5ms] │
+└─────────────────────────────────────────────────────────────┘
+=== Step 1 completed ===
+=== Step 2: start loyalty-service ===
+Host localhost:8050 is active
+newman
+
+[rsoi][lab3] Hotels Booking System
+
+❏ failover / step2
+↳ [failover] Получить информацию о статусе в программе лояльности
+
+Total runtime: 00 min 08 seconds

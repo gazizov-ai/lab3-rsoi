@@ -1,14 +1,59 @@
 {
-	"id": "ec373c4f-f1e2-4d5c-a7ec-cab7c7136014",
-	"name": "[rsoi][local] Hotels Booking System",
-	"values": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:8080",
-			"enabled": true
-		}
-	],
-	"_postman_variable_scope": "environment",
-	"_postman_exported_at": "2021-10-15T18:18:49.371Z",
-	"_postman_exported_using": "Postman/9.0.5"
+  "_": {
+    "postman_variable_scope": "environment",
+    "postman_exported_at": "2025-11-29T04:53:45.629Z",
+    "postman_exported_using": "Newman/6.2.1"
+  },
+  "id": "ec373c4f-f1e2-4d5c-a7ec-cab7c7136014",
+  "name": "[rsoi][local] Hotels Booking System",
+  "values": [
+    {
+      "type": "any",
+      "value": "http://localhost:8080",
+      "key": "baseUrl"
+    },
+    {
+      "type": "any",
+      "value": "049161bb-badd-4fa8-9d90-87c9a82b0668",
+      "key": "hotelUid"
+    },
+    {
+      "type": "any",
+      "value": "Test Max",
+      "key": "username"
+    },
+    {
+      "type": "any",
+      "value": 10000,
+      "key": "hotelPrice"
+    },
+    {
+      "type": "any",
+      "value": 10,
+      "key": "discount"
+    },
+    {
+      "type": "any",
+      "value": 25,
+      "key": "reservationCount"
+    },
+    {
+      "type": "any",
+      "value": "2021-10-08",
+      "key": "startDate"
+    },
+    {
+      "type": "any",
+      "value": "2021-10-11",
+      "key": "endDate"
+    },
+    {
+      "type": "any",
+      "value": "5fc85d89-812a-42da-a93c-94dc82bf44a0",
+      "key": "reservationUid"
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2025-11-29T04:54:16.621Z",
+  "_postman_exported_using": "Newman/6.2.1"
 }

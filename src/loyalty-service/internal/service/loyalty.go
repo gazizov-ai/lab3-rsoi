@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gazizov-ai/lab2-rsoi/src/loyalty-service/internal/model"
 	"github.com/gazizov-ai/lab2-rsoi/src/loyalty-service/internal/repository"
@@ -24,5 +25,11 @@ func (s *LoyaltyService) GetLoyalty(ctx context.Context, username string) (model
 }
 
 func (s *LoyaltyService) IncrementReservationCount(ctx context.Context, username string) error {
+	fmt.Println("INC", username)
 	return s.repo.IncrementReservationCount(ctx, username)
+}
+
+func (s *LoyaltyService) DecrementReservationCount(ctx context.Context, username string) error {
+	fmt.Println("DEC", username)
+	return s.repo.DecrementReservationCount(ctx, username)
 }

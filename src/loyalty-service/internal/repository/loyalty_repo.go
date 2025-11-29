@@ -53,3 +53,19 @@ func (r *LoyaltyRepository) IncrementReservationCount(ctx context.Context, usern
 	}
 	return nil
 }
+
+func (r *LoyaltyRepository) DecrementReservationCount(ctx context.Context, username string) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE loyalties 
+		 SET reservation_count = CASE
+		 	 WHEN reservation_count > 0 THEN reservation_count - 1
+		 	 ELSE 0
+		 END
+		 WHERE username = $1`,
+		username,
+	)
+	if err != nil {
+		return fmt.Errorf("increment reservation_count: %w", err)
+	}
+	return nil
+}

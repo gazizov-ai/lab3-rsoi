@@ -63,16 +63,7 @@ func (s *GatewayService) ListHotels(ctx context.Context, page, size int) (model.
 }
 
 func (s *GatewayService) GetLoyalty(username string) (model.Loyalty, error) {
-	lo, err := s.loyaltyClient.GetLoyalty(username)
-	if err != nil {
-		return model.Loyalty{
-			Status:           "BRONZE",
-			Discount:         0,
-			ReservationCount: 0,
-		}, nil
-	}
-
-	return lo, nil
+	return s.loyaltyClient.GetLoyalty(username)
 }
 
 func (s *GatewayService) ListUserReservations(ctx context.Context, username string) ([]model.ReservationShort, error) {
@@ -160,7 +151,7 @@ func (s *GatewayService) createReservationOnce(ctx context.Context, username, ho
 
 	loyalty, err := s.GetLoyalty(username)
 	if err != nil {
-		return model.ReservationCreateResponse{}, err
+		return model.ReservationCreateResponse{}, ErrServiceUnavailable
 	}
 
 	days := int(end.Sub(start).Hours() / 24)
@@ -172,7 +163,6 @@ func (s *GatewayService) createReservationOnce(ctx context.Context, username, ho
 
 	var payment model.Payment
 	paymentCreated := false
-	reservationCreated := false
 
 	payment, err = s.paymentClient.CreatePayment(username, finalPrice)
 	if err != nil {
@@ -196,16 +186,16 @@ func (s *GatewayService) createReservationOnce(ctx context.Context, username, ho
 		}
 		return model.ReservationCreateResponse{}, err
 	}
-	reservationCreated = true
 
 	if err := s.loyaltyClient.IncrementReservation(username); err != nil {
-		if reservationCreated {
-			_ = s.reservationClient.CancelReservation(fullRes.ReservationUID)
+		if s.tasks != nil {
+			select {
+			case s.tasks <- func(ctx context.Context) {
+				_ = s.loyaltyClient.IncrementReservation(username)
+			}:
+			default:
+			}
 		}
-		if paymentCreated {
-			_ = s.paymentClient.CancelPayment(payment.PaymentUID)
-		}
-		return model.ReservationCreateResponse{}, err
 	}
 
 	resp := model.ReservationCreateResponse{
@@ -232,6 +222,10 @@ func (s *GatewayService) CreateReservation(ctx context.Context, username, hotelU
 
 	if errors.Is(err, ErrHotelNotFound) {
 		return model.ReservationCreateResponse{}, err
+	}
+
+	if errors.Is(err, ErrServiceUnavailable) {
+		return model.ReservationCreateResponse{}, ErrServiceUnavailable
 	}
 
 	if s.tasks != nil {
@@ -265,14 +259,17 @@ func (s *GatewayService) CancelReservation(ctx context.Context, username, reserv
 	if r.ReservationUID == "" {
 		return nil
 	}
+	fmt.Println("CANCEL CHECK:", r.Username, "vs", username)
 	if r.Username != username {
 		return errors.New("forbidden")
 	}
 
 	if err := s.reservationClient.CancelReservation(reservationUID); err != nil {
+		fmt.Println("CANCEL_RESERVATION ERROR", err)
 		return err
 	}
 	if err := s.paymentClient.CancelPayment(r.PaymentUID); err != nil {
+		fmt.Println("PAYMENT ERROR:", err)
 		if s.tasks != nil {
 			select {
 			case s.tasks <- func(ctx context.Context) {
@@ -283,13 +280,34 @@ func (s *GatewayService) CancelReservation(ctx context.Context, username, reserv
 		}
 		return nil
 	}
+
+	if err := s.loyaltyClient.DecrementReservation(username); err != nil {
+		if s.tasks != nil {
+			select {
+			case s.tasks <- func(ctx context.Context) {
+				for {
+					if err := s.loyaltyClient.DecrementReservation(username); err == nil {
+						return
+					}
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(1 * time.Second):
+					}
+				}
+			}:
+			default:
+			}
+		}
+	}
+
 	return nil
 }
 
 func (s *GatewayService) Me(ctx context.Context, username string) (model.MeResponse, error) {
 	loyalty, err := s.GetLoyalty(username)
 	if err != nil {
-		return model.MeResponse{}, err
+		loyalty = model.Loyalty{}
 	}
 
 	reservations, err := s.ListUserReservations(ctx, username)

@@ -34,13 +34,25 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Loyalty(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 4 {
+	path := strings.Trim(r.URL.Path, "/")
+	parts := strings.Split(path, "/")
+
+	if len(parts) < 3 || parts[0] != "internal" || parts[1] != "loyalty" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	username := parts[len(parts)-1]
+	isDecrement := len(parts) == 4 && parts[3] == "decrement"
+
+	var username string
+	if isDecrement {
+		username = parts[2]
+	} else if len(parts) == 3 {
+		username = parts[2]
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	if username == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -48,6 +60,10 @@ func (h *Handler) Loyalty(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
+		if isDecrement {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
 		resp, err := h.loyaltyService.GetLoyalty(r.Context(), username)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
@@ -60,10 +76,18 @@ func (h *Handler) Loyalty(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(resp)
 
 	case http.MethodPost:
-		if err := h.loyaltyService.IncrementReservationCount(r.Context(), username); err != nil {
+		var err error
+		if isDecrement {
+			err = h.loyaltyService.DecrementReservationCount(r.Context(), username)
+		} else {
+			err = h.loyaltyService.IncrementReservationCount(r.Context(), username)
+		}
+
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 
@@ -96,16 +120,4 @@ func (h *Handler) Increment(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func last(path string) string {
-	n := len(path)
-	if n == 0 {
-		return ""
-	}
-	i := n - 1
-	for i >= 0 && path[i] != '/' {
-		i--
-	}
-	return path[i+1:]
 }

@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -62,7 +63,7 @@ func (h *Handler) Loyalty(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.svc.GetLoyalty(username)
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, err.Error())
+		WriteError(w, http.StatusServiceUnavailable, "Loyalty Service unavailable")
 		return
 	}
 	WriteJSON(w, http.StatusOK, resp)
@@ -110,6 +111,10 @@ func (h *Handler) CreateReservation(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.svc.CreateReservation(r.Context(), username, body.HotelUID, body.StartDate, body.EndDate)
 	if err != nil {
+		if errors.Is(err, service.ErrServiceUnavailable) {
+			WriteError(w, http.StatusServiceUnavailable, "Loyalty Service unavailable")
+			return
+		}
 		WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
